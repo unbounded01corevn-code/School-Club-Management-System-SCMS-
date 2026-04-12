@@ -10,7 +10,27 @@ type Post = {
   createdAt: string
 }
 
-function DropdownMenu({ onDelete, onEdit }: { onDelete: () => void, onEdit: () => void }) {
+const STORAGE_KEY = 'posts_app'
+
+function loadPosts(): Post[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const data = localStorage.getItem(STORAGE_KEY)
+    return data ? JSON.parse(data) : []
+  } catch {
+    return []
+  }
+}
+
+function savePosts(posts: Post[]) {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(posts))
+}
+
+function DropdownMenu({ onDelete, onEdit }: {
+  onDelete: (e?: React.MouseEvent) => void
+  onEdit: (e?: React.MouseEvent) => void
+}) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -38,8 +58,8 @@ function DropdownMenu({ onDelete, onEdit }: { onDelete: () => void, onEdit: () =
 
       {open && (
         <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg p-2 z-50">
-          <button className="block w-full text-left hover:bg-gray-100 px-3 py-1" onClick={onDelete}>Xóa</button>
           <button className="block w-full text-left hover:bg-gray-100 px-3 py-1" onClick={onEdit}>Sửa</button>
+          <button className="block w-full text-left hover:bg-gray-100 px-3 py-1 text-red-500" onClick={onDelete}>Xóa</button>
         </div>
       )}
     </div>
@@ -51,38 +71,52 @@ function Otter() {
     <img
       src="/ráicá.JPG"
       alt="Otter"
-      className="w-[240px] drop-shadow-xl select-none pointer-events-none"
+      width={240}
+      height={240}
+      className="drop-shadow-xl select-none pointer-events-none"
     />
   )
 }
 
 export default function Home() {
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: 1,
-      title: 'Bài viết giới thiệu (Ghim)',
-      content: 'Đây là bài viết giới thiệu trang web.',
-      pinned: true,
-      createdAt: new Date().toISOString()
-    }
-  ])
-
+  const [posts, setPosts] = useState<Post[]>([])
   const [view, setView] = useState<'home' | 'create' | 'detail'>('home')
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
 
   const [search, setSearch] = useState('')
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
 
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
-
   const [speech, setSpeech] = useState('')
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  useEffect(() => {
+    const stored = loadPosts()
+    if (stored.length) {
+      setPosts(stored)
+    } else {
+      setPosts([
+        {
+          id: 1,
+          title: 'Bài viết giới thiệu',
+          content: 'Đây là bài viết giới thiệu trang web.',
+          pinned: true,
+          createdAt: new Date().toISOString()
+        }
+      ])
+    }
+  }, [])
+
+  useEffect(() => {
+    savePosts(posts)
+  }, [posts])
 
   useEffect(() => {
     if (!speech) return
-    const t = setTimeout(() => setSpeech(''), 7000)
+    const t = setTimeout(() => setSpeech(''), 3000)
     return () => clearTimeout(t)
   }, [speech])
 
@@ -92,46 +126,62 @@ export default function Home() {
   const filtered = others
     .filter(p => {
       if (!search) return true
-      return p.title.toLowerCase().includes(search.toLowerCase()) || p.content.toLowerCase().includes(search.toLowerCase())
+      const keyword = search.toLowerCase()
+      return p.title.toLowerCase().includes(keyword) || p.content.toLowerCase().includes(keyword)
     })
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
-  const visiblePosts = search ? filtered : (pinned ? [pinned, ...filtered] : filtered)
+  const visiblePosts = search
+    ? filtered
+    : (pinned ? [pinned, ...filtered] : filtered)
 
-  const handlePost = () => {
-    if (!pinned || !title.trim() || !content.trim()) return
-
-    const newPost: Post = {
-      id: Date.now(),
-      title,
-      content,
-      createdAt: new Date().toISOString()
-    }
-
-    const updated = [pinned, newPost, ...others.slice(0, 3)]
-    setPosts(updated)
-
+  const resetForm = () => {
     setTitle('')
     setContent('')
+    setEditingId(null)
+  }
+
+  const handleSubmit = () => {
+    if (!title.trim() || !content.trim()) return
+
+    if (editingId) {
+      setPosts(prev => prev.map(p => p.id === editingId ? { ...p, title, content } : p))
+      setSpeech('Cập nhật thành công')
+    } else {
+      const newPost: Post = {
+        id: Date.now(),
+        title,
+        content,
+        createdAt: new Date().toISOString()
+      }
+      setPosts(prev => [newPost, ...prev])
+      setSpeech('Đăng bài thành công')
+    }
+
+    resetForm()
     setView('home')
     setConfirmOpen(false)
-    setSpeech('Đăng bài thành công!')
   }
 
   const deletePost = (id: number) => {
     setPosts(prev => prev.filter(p => p.id !== id))
+    if (selectedPost?.id === id) {
+      setSelectedPost(null)
+      setView('home')
+    }
+    setSpeech('Đã xóa bài')
   }
 
   return (
-    <div className={`${darkMode ? 'bg-black text-white' : 'bg-sky-200 text-black'} flex h-screen font-[Calibri]`}>
+    <div className={`${darkMode ? 'bg-black text-white' : 'bg-sky-200 text-black'} flex h-screen font-sans`}>
 
       <div className={`${darkMode ? 'bg-slate-700' : 'bg-indigo-900'} w-20 flex flex-col items-center py-4 gap-6`}>
         <button onClick={() => setView('home')} className="text-white text-xl">🏠</button>
-        <button onClick={() => setView('create')} className="text-white text-xl">≡</button>
+        <button onClick={() => setView('create')} className="text-white text-xl">✏️</button>
         <button onClick={() => setSettingsOpen(true)} className="text-white text-xl">⚙️</button>
       </div>
 
-      <div className="flex-1 p-6 overflow-y-scroll">
+      <div className="flex-1 p-6 overflow-y-auto">
 
         {view === 'home' && (
           <>
@@ -139,7 +189,7 @@ export default function Home() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Tìm kiếm"
-              className={`${darkMode ? 'bg-slate-700' : 'bg-blue-500'} w-full p-4 rounded-xl text-xl mb-6`}
+              className="w-full p-4 rounded-xl text-xl mb-6 bg-blue-500"
             />
 
             <div className="space-y-6">
@@ -154,12 +204,15 @@ export default function Home() {
                 >
                   <div className="flex justify-between">
                     <h2 className="text-2xl font-bold">{post.title}</h2>
+
                     {!post.pinned && (
                       <DropdownMenu
-                        onDelete={() => deletePost(post.id)}
-                        onEdit={() => {
+                        onDelete={(e) => { e?.stopPropagation(); deletePost(post.id) }}
+                        onEdit={(e) => {
+                          e?.stopPropagation()
                           setTitle(post.title)
                           setContent(post.content)
+                          setEditingId(post.id)
                           setView('create')
                         }}
                       />
@@ -175,21 +228,19 @@ export default function Home() {
         {view === 'create' && (
           <div className="max-w-4xl mx-auto">
             <input
-              maxLength={200}
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Tiêu đề"
               className="w-full border p-4 text-xl mb-4"
             />
             <textarea
-              maxLength={2000}
               value={content}
               onChange={e => setContent(e.target.value)}
               placeholder="Nội dung"
               className="w-full border p-4 h-64"
             />
             <div className="flex justify-end mt-4">
-              <button onClick={() => setConfirmOpen(true)} className="bg-blue-500 px-6 py-2 rounded-xl">Đăng</button>
+              <button onClick={() => setConfirmOpen(true)} className="bg-blue-500 px-6 py-2 rounded-xl">Lưu</button>
             </div>
           </div>
         )}
@@ -205,45 +256,41 @@ export default function Home() {
       {view === 'home' && (
         <div className="fixed bottom-6 right-6 flex flex-col items-end">
           {speech && (
-            <div className="relative mb-3">
-              <div className="bg-white border-2 border-blue-400 px-4 py-2 rounded-xl shadow-lg max-w-xs">{speech}</div>
-              <div className="absolute right-6 -bottom-2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-white" />
-              <div className="absolute right-6 -bottom-[10px] w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-blue-400" />
-            </div>
+            <div className="bg-white border px-4 py-2 rounded-xl shadow mb-3 text-black">{speech}</div>
           )}
           <Otter />
         </div>
       )}
 
-      {confirmOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/30">
-          <div className="bg-blue-100 p-10 rounded-xl w-[420px]">
-            <p>Bạn xác nhận đăng bài viết?</p>
-            <div className="flex gap-4 mt-4">
-              <button onClick={handlePost} className="bg-blue-200 px-4 py-2">Xác nhận</button>
-              <button onClick={() => setConfirmOpen(false)} className="bg-red-600 text-white px-4 py-2">Hủy</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {settingsOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30">
-          <div className="bg-blue-100 p-10 rounded-xl w-[420px]">
+          <div className="bg-white p-10 rounded-xl w-[420px]">
             <button onClick={() => setSettingsOpen(false)} className="float-right">X</button>
 
             <div className="mt-4">
               <p>Giao diện:</p>
-              <button onClick={() => setDarkMode(false)} className="bg-blue-200 px-2">Xanh</button>
-              <button onClick={() => setDarkMode(true)} className="bg-gray-800 text-white px-2 ml-2">Đen</button>
+              <button onClick={() => setDarkMode(false)} className="bg-blue-200 px-2">Sáng</button>
+              <button onClick={() => setDarkMode(true)} className="bg-gray-800 text-white px-2 ml-2">Tối</button>
             </div>
 
             <div className="mt-6">
               <p className="mb-2">Tài khoản:</p>
               <div className="flex gap-4">
-                <button onClick={() => setSpeech('Đăng nhập thành công')} className="bg-blue-900 text-black px-4 py-2">Đăng nhập</button>
-                <button onClick={() => setSpeech('Đã đăng xuất')} className="bg-red-700 text-white px-4 py-2">Đăng xuất</button>
+                <button onClick={() => setSpeech('Đăng nhập thành công')} className="bg-blue-500 text-white px-4 py-2">Đăng nhập</button>
+                <button onClick={() => setSpeech('Đã đăng xuất')} className="bg-red-500 text-white px-4 py-2">Đăng xuất</button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/30">
+          <div className="bg-white p-10 rounded-xl w-[420px]">
+            <p>Xác nhận?</p>
+            <div className="flex gap-4 mt-4">
+              <button onClick={handleSubmit} className="bg-blue-500 px-4 py-2 text-white">OK</button>
+              <button onClick={() => setConfirmOpen(false)} className="bg-gray-300 px-4 py-2">Hủy</button>
             </div>
           </div>
         </div>
