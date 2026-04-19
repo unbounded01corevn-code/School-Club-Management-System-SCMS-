@@ -65,3 +65,5 @@ vite.config.ts.timestamp-*
 
 # Vercel
 .vercel
+
+.env.local
