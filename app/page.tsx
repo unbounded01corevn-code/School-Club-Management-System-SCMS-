@@ -11,6 +11,7 @@ interface Post {
   pinned?: boolean;
 }
 
+
 export default function Page() {
   const [posts, setPosts] = useState<Post[]>([
     { id: 1, title: 'Chào mừng', content: 'Chào bạn đã đến với không gian của Hải cẩu.', createdAt: Date.now(), pinned: true }
