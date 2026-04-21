@@ -284,6 +284,8 @@ export default function Page() {
           </div>
         )}
 
+
+
 {showSettings && (
   <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[100]">
     <div className={darkMode ? 'relative bg-slate-900 text-white w-[420px] p-6 rounded-3xl shadow-2xl border border-slate-700' : 'relative bg-blue-50 text-black w-[420px] p-6 rounded-3xl shadow-2xl'}>
