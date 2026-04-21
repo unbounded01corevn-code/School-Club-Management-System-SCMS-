@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
-    const spreadsheetId = '1HG2I77yymxsMq-jtPqFFDz32Cfwwnuzhfqzz1wmXMVc';
+    const spreadsheetId = '179W5w16EszATCLx0VdXIY9v-8bA6-_1zrX7rwh3yCls';
 
     // Gọi đúng cái Tab mà mình muốn
     const response = await sheets.spreadsheets.values.get({
