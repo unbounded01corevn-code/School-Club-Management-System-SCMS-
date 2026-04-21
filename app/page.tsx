@@ -152,8 +152,6 @@ export default function Page() {
   const addPost = async () => {
     const originalPost = posts.find(p => p.id === editingId);
     
-
-    
     try {
       if (editingId && originalPost) {
         // CHẾ ĐỘ SỬA: Gửi yêu cầu PUT để cập nhật hàng cũ
