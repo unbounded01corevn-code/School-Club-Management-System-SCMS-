@@ -291,7 +291,7 @@ export default function Page() {
       <h2 className="text-xl font-bold mb-6">Cài đặt</h2>
       
       <div className="mb-8">
-        <p className={darkMode ? "text-sm mb-3 font-semibold text-gray-300 uppercase tracking-wider" : "text-sm mb-3 font-semibold opacity-60 uppercase tracking-wider"}>Giao diện</p>
+        <p className={darkMode ? "text-sm mb-3 font-semibold text-gray-200 uppercase tracking-wider" : "text-sm mb-3 font-semibold opacity-60 uppercase tracking-wider"}>Giao diện</p>
         <div className="flex gap-3">
           <button onClick={() => safeAction(() => setDarkMode(false), 'themeLight')} className="flex-1 py-3 rounded-2xl bg-white border-2 border-blue-200 text-black font-medium">Sáng 🌤️</button>
           <button onClick={() => safeAction(() => setDarkMode(true), 'themeDark')} className="flex-1 py-3 rounded-2xl bg-slate-800 text-white border border-slate-600 font-medium">Tối 🌙</button>
@@ -299,7 +299,7 @@ export default function Page() {
       </div>
 
       <div>
-        <p className={darkMode ? "text-sm mb-3 font-semibold text-gray-300 uppercase tracking-wider" : "text-sm mb-3 font-semibold opacity-60 uppercase tracking-wider"}>Tài khoản</p>
+        <p className={darkMode ? "text-sm mb-3 font-semibold text-gray-200 uppercase tracking-wider" : "text-sm mb-3 font-semibold opacity-60 uppercase tracking-wider"}>Tài khoản</p>
         {!isLogin ? (
           <button onClick={() => safeAction(() => setIsLogin(true), 'login')} className="w-full py-3 rounded-2xl bg-indigo-600 text-white font-bold">Đăng nhập</button>
         ) : (
