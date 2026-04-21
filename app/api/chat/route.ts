@@ -2,11 +2,13 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
 export async function POST(req: Request) {
   try {
     const { message } = await req.json();
+
+    const genAI = new GoogleGenerativeAI(
+      process.env.GEMINI_API_KEY || ""
+    );
 
     const auth = new google.auth.GoogleAuth({
       credentials: {
@@ -19,29 +21,40 @@ export async function POST(req: Request) {
     const sheets = google.sheets({ version: "v4", auth });
 
     const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: "1irhk8wW5W8Mwtq9nt0p4CCwvWC2-J3aRXjySVJUxXjE",
-      range: "Sheet1!A2:B",
+      spreadsheetId: "1SPwNmYucKvCiSFr0SC7mwtN113CSx6eglXIc4A3ugq8",
+      range: "ai_rows!A:B",
     });
 
     const rows = res.data.values || [];
 
     const context = rows
-      .map(r => `Sự kiện: ${r[0]} | Chi tiết: ${r[1]}`)
+      .map((row) => `Tiêu đề: ${row[0]} | Nội dung: ${row[1]}`)
       .join("\n");
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const prompt = `
+Bạn là trợ lý website CLB.
 
-    const result = await model.generateContent(
-      `Bạn là Hải cẩu NSEC. Dữ liệu:\n${context}\n\nCâu hỏi:${message}`
-    );
+Dữ liệu:
+${context}
+
+Câu hỏi:
+${message}
+`;
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
+    });
+
+    const result = await model.generateContent(prompt);
 
     return NextResponse.json({
       reply: result.response.text(),
     });
 
-  } catch {
+  } catch (error) {
+    console.error(error);
     return NextResponse.json(
-      { reply: "Lỗi kết nối rồi ông ơi!" },
+      { reply: "Lỗi kết nối rồi!" },
       { status: 500 }
     );
   }

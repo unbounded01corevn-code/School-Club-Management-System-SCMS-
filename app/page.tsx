@@ -214,17 +214,47 @@ export default function Page() {
             </div>
           ))}
 
-          {view === 'create' && (
-            <div className="max-w-3xl mx-auto">
-              <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Tiêu đề" className="w-full p-4 text-2xl rounded-2xl border mb-4 text-black focus:ring-2 focus:ring-blue-400 outline-none" />
-              <textarea value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} placeholder="Nội dung" className="w-full h-[400px] p-4 rounded-2xl border text-black focus:ring-2 focus:ring-blue-400 outline-none" />
-              <div className="flex gap-4 mt-5">
-                <button onClick={() => safeAction(() => setShowConfirm(true), 'preparingPost')} className="bg-blue-600 text-white px-8 py-3 rounded-2xl hover:bg-blue-700">Đăng bài</button>
-                <button onClick={() => setView('home')} className="bg-gray-500 text-white px-8 py-3 rounded-2xl">Hủy</button>
-              </div>
-            </div>
-          )}
+    {view === 'create' && (
+  <div className="max-w-3xl mx-auto">
 
+    <input
+      value={form.title}
+      onChange={e => setForm({ ...form, title: e.target.value })}
+      placeholder="Tiêu đề"
+      className={darkMode
+        ? "w-full p-4 text-2xl rounded-2xl border mb-4 bg-slate-800 text-gray-100 border-slate-700 focus:ring-2 focus:ring-blue-400 outline-none placeholder-gray-400"
+        : "w-full p-4 text-2xl rounded-2xl border mb-4 bg-white text-black border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none placeholder-gray-500"}
+    />
+
+    <textarea
+      value={form.content}
+      onChange={e => setForm({ ...form, content: e.target.value })}
+      placeholder="Nội dung"
+      className={darkMode
+        ? "w-full h-[400px] p-4 rounded-2xl border bg-slate-800 text-gray-100 border-slate-700 focus:ring-2 focus:ring-blue-400 outline-none placeholder-gray-400 resize-none"
+        : "w-full h-[400px] p-4 rounded-2xl border bg-white text-black border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none placeholder-gray-500 resize-none"}
+    />
+
+    <div className="flex gap-4 mt-5">
+      <button
+        type="button"
+        onClick={() => safeAction(() => setShowConfirm(true), 'preparingPost')}
+        className="bg-blue-600 text-white px-8 py-3 rounded-2xl hover:bg-blue-700"
+      >
+        Đăng bài
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setView('home')}
+        className="bg-gray-500 text-white px-8 py-3 rounded-2xl hover:bg-gray-600"
+      >
+        Hủy
+      </button>
+    </div>
+
+  </div>
+)}
           {view === 'view' && currentPost && (
             <div className={darkMode ? "max-w-3xl mx-auto bg-slate-900 p-8 rounded-3xl text-white border border-slate-800" : "max-w-3xl mx-auto bg-white/5 p-8 rounded-3xl text-black"}>
               <button onClick={() => setView('home')} className="mb-6 text-blue-500">← Quay lại</button>
@@ -254,35 +284,32 @@ export default function Page() {
           </div>
         )}
 
-        {showSettings && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[100]">
-            <div className={darkMode ? 'relative bg-slate-900 text-white w-[420px] p-6 rounded-3xl shadow-2xl border border-slate-700' : 'relative bg-blue-50 text-black w-[420px] p-6 rounded-3xl shadow-2xl'}>
-              <button className="absolute top-4 right-4" onClick={() => safeAction(() => setShowSettings(false), 'closeSettings')}>✕</button>
-              <h2 className="text-xl font-bold mb-6">Cài đặt</h2>
-              
-              <div className="mb-8">
-                <p className={darkMode ? "text-sm mb-3 font-semibold text-gray-400 uppercase tracking-wider" : "text-sm mb-3 font-semibold opacity-60 uppercase tracking-wider"}>Giao diện</p>
-                <div className="flex gap-3">
-                  <button onClick={() => safeAction(() => setDarkMode(false), 'themeLight')} className="flex-1 py-3 rounded-2xl bg-white border-2 border-blue-200 text-black font-medium">Sáng 🌤️</button>
-                  <button onClick={() => safeAction(() => setDarkMode(true), 'themeDark')} className="flex-1 py-3 rounded-2xl bg-slate-800 text-white border border-slate-600 font-medium">Tối 🌙</button>
-                </div>
-              </div>
+{showSettings && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[100]">
+    <div className={darkMode ? 'relative bg-slate-900 text-white w-[420px] p-6 rounded-3xl shadow-2xl border border-slate-700' : 'relative bg-blue-50 text-black w-[420px] p-6 rounded-3xl shadow-2xl'}>
+      <button className="absolute top-4 right-4" onClick={() => safeAction(() => setShowSettings(false), 'closeSettings')}>✕</button>
+      <h2 className="text-xl font-bold mb-6">Cài đặt</h2>
+      
+      <div className="mb-8">
+        <p className={darkMode ? "text-sm mb-3 font-semibold text-gray-300 uppercase tracking-wider" : "text-sm mb-3 font-semibold opacity-60 uppercase tracking-wider"}>Giao diện</p>
+        <div className="flex gap-3">
+          <button onClick={() => safeAction(() => setDarkMode(false), 'themeLight')} className="flex-1 py-3 rounded-2xl bg-white border-2 border-blue-200 text-black font-medium">Sáng 🌤️</button>
+          <button onClick={() => safeAction(() => setDarkMode(true), 'themeDark')} className="flex-1 py-3 rounded-2xl bg-slate-800 text-white border border-slate-600 font-medium">Tối 🌙</button>
+        </div>
+      </div>
 
-              <div>
-                <p className={darkMode ? "text-sm mb-3 font-semibold text-gray-400 uppercase tracking-wider" : "text-sm mb-3 font-semibold opacity-60 uppercase tracking-wider"}>Tài khoản</p>
-                {!isLogin ? (
-                  <button onClick={() => safeAction(() => setIsLogin(true), 'login')} className="w-full py-3 rounded-2xl bg-indigo-600 text-white font-bold">Đăng nhập</button>
-                ) : (
-                  <button onClick={() => safeAction(() => setIsLogin(false), 'logout')} className="w-full py-3 rounded-2xl bg-red-500 text-white font-bold">Đăng xuất</button>
-                )}
-              </div>
-            </div>
-          </div>
+      <div>
+        <p className={darkMode ? "text-sm mb-3 font-semibold text-gray-300 uppercase tracking-wider" : "text-sm mb-3 font-semibold opacity-60 uppercase tracking-wider"}>Tài khoản</p>
+        {!isLogin ? (
+          <button onClick={() => safeAction(() => setIsLogin(true), 'login')} className="w-full py-3 rounded-2xl bg-indigo-600 text-white font-bold">Đăng nhập</button>
+        ) : (
+          <button onClick={() => safeAction(() => setIsLogin(false), 'logout')} className="w-full py-3 rounded-2xl bg-red-500 text-white font-bold">Đăng xuất</button>
         )}
+      </div>
+    </div>
+  </div>
+)}
       </div>
     </div>
   )
 }
-
-
-
