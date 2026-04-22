@@ -104,3 +104,52 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Lỗi cập nhật: " + error.message }, { status: 500 });
   }
 }
+
+// 4. XÓA BÀI VIẾT (DELETE) - Phần mới thêm để fix lỗi 405
+export async function DELETE(request: Request) {
+  try {
+    const body = await request.json();
+    const { title, tab = DEFAULT_TAB } = body;
+
+    const sheets = await getSheetsClient();
+
+    // Bước 1: Lấy dữ liệu để tìm vị trí hàng
+    const getRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${tab}!A:B`,
+    });
+
+    const rows = getRes.data.values || [];
+    
+    // Bước 2: Tìm index của hàng có tiêu đề khớp
+    const rowIndex = rows.findIndex(row => row[0]?.toString().trim() === title?.toString().trim());
+
+    if (rowIndex === -1) {
+      return NextResponse.json({ error: "Không tìm thấy hàng cần xóa" }, { status: 404 });
+    }
+
+    // Bước 3: Thực hiện xóa hàng đó thông qua batchUpdate
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SPREADSHEET_ID,
+      requestBody: {
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId: 0, // 'Trang tính1' thường có ID mặc định là 0
+                dimension: 'ROWS',
+                startIndex: rowIndex,
+                endIndex: rowIndex + 1,
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    return NextResponse.json({ success: true, message: "Đã xóa hàng thành công" });
+  } catch (error: any) {
+    console.error("Lỗi DELETE GSheets:", error.message);
+    return NextResponse.json({ error: "Lỗi xóa dữ liệu: " + error.message }, { status: 500 });
+  }
+}

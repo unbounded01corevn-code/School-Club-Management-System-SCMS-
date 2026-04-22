@@ -119,6 +119,29 @@ export default function Page() {
     }
   }
 
+  // --- HÀM XÓA BÀI VIẾT TRÊN GOOGLE SHEET ---
+  const deletePost = async (post: Post) => {
+    if (!confirm("Ông có chắc muốn cho bài này 'bay màu' vĩnh viễn trên Sheet không?")) return;
+    
+    try {
+      const response = await fetch('/api/gsheets', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: post.title }), // Dùng tiêu đề làm định danh để xóa
+      });
+
+      if (response.ok) {
+        triggerOtter(messages.delete);
+        await fetchPostsFromSheet(); // Tải lại danh sách mới nhất
+      } else {
+        triggerOtter("Lỗi xóa trên Sheet rồi ông ơi!");
+      }
+    } catch (err) {
+      console.error("Lỗi xóa bài:", err);
+      triggerOtter(messages.postFail);
+    }
+  };
+
   // Tự động load khi mở trang
   useEffect(() => {
     fetchPostsFromSheet();
@@ -151,7 +174,7 @@ export default function Page() {
   // --- HÀM ADD/UPDATE POST (ĐÃ TÍCH HỢP LƯU SHEET) ---
   const addPost = async () => {
     const originalPost = posts.find(p => p.id === editingId);
-
+    
     try {
       if (editingId && originalPost) {
         // CHẾ ĐỘ SỬA: Gửi yêu cầu PUT để cập nhật hàng cũ
@@ -269,7 +292,7 @@ export default function Page() {
                   {openMenu === post.id && (
                     <div className="absolute right-0 mt-2 bg-white text-black rounded-xl shadow-xl overflow-hidden z-10 w-32">
                       <button className="block w-full text-left px-5 py-2 hover:bg-gray-100" onClick={() => safeAction(() => { setForm({ title: post.title, content: post.content }); setEditingId(post.id); setView('create') }, 'edit')}>Sửa</button>
-                      {!post.pinned && <button className="block w-full text-left px-5 py-2 text-red-500 hover:bg-gray-100" onClick={() => safeAction(() => setPosts(posts.filter(p => p.id !== post.id)), 'delete')}>Xóa</button>}
+                      {!post.pinned && <button className="block w-full text-left px-5 py-2 text-red-500 hover:bg-gray-100" onClick={() => deletePost(post)}>Xóa</button>}
                     </div>
                   )}
                 </div>
@@ -277,7 +300,7 @@ export default function Page() {
             </div>
           ))}
 
-          {/* Create/Edit Form (ĐÃ SỬA LỖI MÀU CHỮ DARK MODE) */}
+          {/* Create/Edit Form */}
           {view === 'create' && (
             <div className="max-w-3xl mx-auto">
               <input 
@@ -361,5 +384,3 @@ export default function Page() {
     </div>
   )
 }
-
-
